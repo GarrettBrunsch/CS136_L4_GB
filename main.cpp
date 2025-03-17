@@ -119,7 +119,6 @@ int main()
 {
     int mainChoice = 0;
     Inventory inventory;
-    bool continueProgram = true;
     bool initSuccess = inventory.readInventory();
 
     if (initSuccess)
@@ -146,13 +145,12 @@ int main()
             case QUIT:
                 inventory.printLowInventoryToFile();
                 cout << "Now exiting program...\n\n";
-                continueProgram = false;
                 break;
             default:
                 clearInputError("Invalid menu choice. Please enter a number between 1 and 5.");
                 break;
             }
-        } while (continueProgram);
+        } while (mainChoice != QUIT);
     }
 
     return initSuccess ? 0 : 1;
