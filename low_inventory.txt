@@ -1,0 +1,14 @@
+Car ID    Model               Manufacturer             Qty      Price
+----------------------------------------------------------------------
+UVWX3456  Corolla             Toyota                     4    17999.99   *LOW INVENTORY*
+EFGH5678  Accord              Honda                      3    24999.99   *LOW INVENTORY*
+RSTU6789  Altima              Nissan                     4    25999.99   *LOW INVENTORY*
+KLMN1234  Charger             Dodge                      3    35999.99   *LOW INVENTORY*
+TUVW7891  Highlander          Toyota                     1    37999.99   *LOW INVENTORY*
+HIJK4567  Cherokee            Jeep                       3    38999.99   *LOW INVENTORY*
+PQRS3456  S60                 Volvo                      4    41999.99   *LOW INVENTORY*
+CDEF2345  ModelX              Tesla                      1    79999.99   *LOW INVENTORY*
+JKLM7891  S550                Mercedes                   2    94999.99   *LOW INVENTORY*
+PQRS5678  Stroller            Rolls_Royce                2   199999.99   *LOW INVENTORY*
+PQRS5678  Stroller            Rolls_Royce_Extra          4   199999.99   *LOW INVENTORY*
+TUVW9123  Ghost               Rolls_Royce                1   299999.99   *LOW INVENTORY*
