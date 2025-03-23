@@ -728,8 +728,6 @@ void Inventory::sortInventory(int sortField)
             }
         }
     }
-
-    cout << "Inventory sorted successfully\n";
 }
 
 /*
@@ -828,7 +826,6 @@ Enter choice: 3
 5. Price
 6. Return to Main Menu
 Enter choice: 1
-Inventory sorted successfully
 
 Current Inventory:
 Car ID    Model               Manufacturer             Qty       Price
@@ -863,7 +860,6 @@ ZABC5678  Soul                Kia                        5    19999.99
 5. Price
 6. Return to Main Menu
 Enter choice: 2
-Inventory sorted successfully
 
 Current Inventory:
 Car ID    Model               Manufacturer             Qty       Price
@@ -898,7 +894,6 @@ DEFG9123  Wrangler            Jeep                       7    42999.99
 5. Price
 6. Return to Main Menu
 Enter choice: 3
-Inventory sorted successfully
 
 Current Inventory:
 Car ID    Model               Manufacturer             Qty       Price
@@ -933,7 +928,6 @@ PQRS3456  S60                 Volvo                      4    41999.99   *LOW IN
 5. Price
 6. Return to Main Menu
 Enter choice: 4
-Inventory sorted successfully
 
 Current Inventory:
 Car ID    Model               Manufacturer             Qty       Price
@@ -968,7 +962,6 @@ QRST8912  Camry               Toyota                    15    22999.99
 5. Price
 6. Return to Main Menu
 Enter choice: 5
-Inventory sorted successfully
 
 Current Inventory:
 Car ID    Model               Manufacturer             Qty       Price
