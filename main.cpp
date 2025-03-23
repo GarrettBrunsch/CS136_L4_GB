@@ -89,7 +89,8 @@ class Inventory
 {
 private:
     static const int MAX_RECORDS = 25;
-    Car cars[MAX_RECORDS];
+    Car carStorage[MAX_RECORDS];
+    Car* cars[MAX_RECORDS]; // Pointers used to make sorting more efficient later. This implementation makes it so that only the pointers need to be swapped for sorting rather than the entire data set
     int recordCount = 0;
     static const string INPUT_FILENAME;
     static const string ERROR_FILENAME;
@@ -97,10 +98,10 @@ private:
 
     bool checkAndOpenFiles(ifstream& inFile, ofstream& errorFile) const;
     void processInputFile(ifstream& inFile, ofstream& errorFile);
-    void processLine(const string& line, ofstream& errorFile, bool& continueProcessing);
+    void processLine(const string& line, ofstream& errorFile, int& processedRecords, bool& continueProcessing);
 
 public:
-    Inventory() : recordCount(0) {}
+    Inventory();
 
     bool readInventory();
     void printInventory() const;
@@ -147,7 +148,7 @@ int main()
                 cout << "Now exiting program...\n\n";
                 break;
             default:
-                clearInputError("Invalid menu choice. Please enter a number between 1 and 5.");
+                clearInputError("Invalid menu choice. Please enter a number between 1 and " + to_string(QUIT));
                 break;
             }
         } while (mainChoice != QUIT);
@@ -155,13 +156,6 @@ int main()
 
     return initSuccess ? 0 : 1;
 }
-
-void displayMainMenu();
-void displaySearchMenu();
-void displaySortMenu();
-void clearInputError(const string& errorMessage);
-string toLower(const string& str);
-void handleSearchMenu(const Inventory& inventory);
 
 void displayMainMenu()
 {
@@ -198,7 +192,8 @@ void displaySortMenu()
 string toLower(const string& str)
 {
     string result = str;
-    for (int i = 0; i < result.length(); i++) {
+    for (int i = 0; i < result.length(); i++) 
+    {
         result[i] = tolower(result[i]);
     }
     return result;
@@ -208,7 +203,7 @@ void clearInputError(const string& errorMessage)
 {
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cout << errorMessage << endl;
+    cout << errorMessage << "\n";
 }
 
 void handleSearchMenu(const Inventory& inventory)
@@ -216,7 +211,7 @@ void handleSearchMenu(const Inventory& inventory)
     int searchChoice = 0;
     bool backToMainMenu = false;
 
-    while (!backToMainMenu)
+    do
     {
         displaySearchMenu();
         cin >> searchChoice;
@@ -234,10 +229,10 @@ void handleSearchMenu(const Inventory& inventory)
             backToMainMenu = true;
             break;
         default:
-            clearInputError("Invalid search choice. Please enter a number between 1 and 3.");
+            clearInputError("Invalid search choice. Please enter a number between 1 and " + to_string(BACK_TO_MAIN_MENU));
             break;
         }
-    }
+    } while (searchChoice != BACK_TO_MAIN_MENU);
 }
 
 const string Inventory::INPUT_FILENAME = "inventory.txt";
@@ -245,10 +240,10 @@ const string Inventory::ERROR_FILENAME = "errors.txt";
 const string Inventory::LOW_INVENTORY_FILENAME = "low_inventory.txt";
 const double Car::MIN_PRICE = 12999.00;
 
-Car::Car() : carId("N/A"), carModel("N/A"), carManufacturer("N/A"), carQuantity(0), carPrice(0.0) {}
+Car::Car() : carId("N/A"), carModel("N/A"), carManufacturer("N/A"), carQuantity(0), carPrice(0.0), validationStatus(true), errorMessage("n/a") {}
 
 Car::Car(const string& id, const string& model, const string& manufacturer, int quantity, double price)
-    :carId(id), carModel(model), carManufacturer(manufacturer), carQuantity(quantity), carPrice(price) {}
+    :carId(id), carModel(model), carManufacturer(manufacturer), carQuantity(quantity), carPrice(price), validationStatus(true), errorMessage("n/a") {}
 
 string Car::toString() const
 {
@@ -260,7 +255,8 @@ string Car::toString() const
         << right << setw(8) << carQuantity
         << right << setw(12) << fixed << setprecision(2) << carPrice;
 
-    if (isLowInventory()) {
+    if (isLowInventory()) 
+    {
         ss << "   *LOW INVENTORY*";
     }
 
@@ -397,11 +393,10 @@ bool Inventory::checkAndOpenFiles(ifstream& inFile, ofstream& errorFile) const
     return filesOpen;
 }
 
-void Inventory::processLine(const string& line, ofstream& errorFile, bool& continueProcessing)
+void Inventory::processLine(const string& line, ofstream& errorFile, int& processedRecords, bool& continueProcessing)
 {
-    continueProcessing = true;
 
-    if (recordCount < MAX_RECORDS)
+    if (recordCount < MAX_RECORDS && !line.empty())
     {
         istringstream iss(line);
         string tempId{}, tempModel{}, tempManufacturer{}, quantityStr{}, priceStr{};
@@ -414,21 +409,21 @@ void Inventory::processLine(const string& line, ofstream& errorFile, bool& conti
             bool validPrice = true;
             string additionalError = "";
 
-            try 
+            try
             {
                 tempQuantity = stoi(quantityStr);
             }
-            catch (...) 
+            catch (...)
             {
                 validQuantity = false;
                 additionalError += "Invalid quantity format; ";
             }
 
-            try 
+            try
             {
                 tempPrice = stod(priceStr);
             }
-            catch (...) 
+            catch (...)
             {
                 validPrice = false;
                 additionalError += "Invalid price format; ";
@@ -437,23 +432,24 @@ void Inventory::processLine(const string& line, ofstream& errorFile, bool& conti
             Car tempCar(tempId, tempModel, tempManufacturer, tempQuantity, tempPrice);
             tempCar.validateRecord();
 
-            if (validQuantity && validPrice && tempCar.isValid()) 
+            if (validQuantity && validPrice && tempCar.isValid())
             {
-                cars[recordCount] = tempCar;
+                carStorage[recordCount] = tempCar;
+                cars[recordCount] = &carStorage[recordCount];
                 recordCount++;
             }
-            else 
+            else
             {
                 string errorMsg = tempCar.getErrorMessage() + additionalError;
                 errorFile << tempCar.toString() << " - " << errorMsg << "\n";
             }
         }
-        else if (!line.empty()) 
+        else
         {
             cout << "Warning: Invalid format in line: " << line << "\n";
         }
     }
-    else
+    else if (recordCount >= MAX_RECORDS)
     {
         continueProcessing = false;
     }
@@ -462,17 +458,26 @@ void Inventory::processLine(const string& line, ofstream& errorFile, bool& conti
 void Inventory::processInputFile(ifstream& inFile, ofstream& errorFile)
 {
     recordCount = 0;
+    int processedRecords = 0;
     string line;
     bool continueProcessing = true;
 
     while (continueProcessing && getline(inFile, line)) 
     {
-        processLine(line, errorFile, continueProcessing);
+        processLine(line, errorFile, processedRecords, continueProcessing);
     }
 
     if (recordCount >= MAX_RECORDS && inFile.peek() != EOF) 
     {
         cout << "Max record limit of " << MAX_RECORDS << " has been reached\n";
+    }
+}
+
+Inventory::Inventory() : recordCount(0)
+{
+    for (int i = 0; i < MAX_RECORDS; i++)
+    {
+        cars[i] = nullptr;
     }
 }
 
@@ -512,7 +517,7 @@ void Inventory::printInventory() const
 
     for (int i = 0; i < recordCount; i++)
     {
-        cout << cars[i].toString() << "\n";
+        cout << cars[i]->toString() << "\n";
     }
 }
 
@@ -545,36 +550,37 @@ void Inventory::printLowInventoryToFile() const
     if (!outFile)
     {
         cout << "Error opening " << LOW_INVENTORY_FILENAME << " for writing\n";
-        return;
     }
-
-    cout << "\nLow Inventory Items:\n";
-    printHeader();
-
-    outFile << left << setw(10) << "Car ID"
-        << left << setw(20) << "Model"
-        << left << setw(20) << "Manufacturer"
-        << right << setw(8) << "Qty"
-        << right << setw(12) << "Price\n";
-    outFile << string(70, '-') << "\n";
-
-    for (int i = 0; i < recordCount; i++)
+    else
     {
-        if (cars[i].isLowInventory())
+        cout << "\nLow Inventory Items:\n";
+        printHeader();
+
+        outFile << left << setw(10) << "Car ID"
+            << left << setw(20) << "Model"
+            << left << setw(20) << "Manufacturer"
+            << right << setw(8) << "Qty"
+            << right << setw(12) << "Price\n";
+        outFile << string(70, '-') << "\n";
+
+        for (int i = 0; i < recordCount; i++)
         {
-            cout << cars[i].toString() << "\n";
-            outFile << cars[i].toString() << "\n";
-            hasLowInventory = true;
+            if (cars[i]->isLowInventory())
+            {
+                cout << cars[i]->toString() << "\n";
+                outFile << cars[i]->toString() << "\n";
+                hasLowInventory = true;
+            }
         }
-    }
 
-    if (!hasLowInventory)
-    {
-        cout << "No low inventory items found\n";
-        outFile << "No low inventory items found\n";
-    }
+        if (!hasLowInventory)
+        {
+            cout << "No low inventory items found\n";
+            outFile << "No low inventory items found\n";
+        }
 
-    outFile.close();
+        outFile.close();
+    }
 }
 
 void Inventory::searchByModelOrManufacturer() const
@@ -594,8 +600,8 @@ void Inventory::searchByModelOrManufacturer() const
 
     for (int i = 0; i < recordCount; i++)
     {
-        string modelLower = toLower(cars[i].getModel());
-        string manufacturerLower = toLower(cars[i].getManufacturer());
+        string modelLower = toLower(cars[i]->getModel());
+        string manufacturerLower = toLower(cars[i]->getManufacturer());
 
         // Check if search term is a substring of model or manufacturer
         bool foundInModel = modelLower.find(searchTermLower) != string::npos;
@@ -603,7 +609,7 @@ void Inventory::searchByModelOrManufacturer() const
 
         if (foundInModel || foundInManufacturer)
         {
-            cout << cars[i].toString() << "\n";
+            cout << cars[i]->toString() << "\n";
             found = true;
         }
     }
@@ -618,7 +624,7 @@ void Inventory::searchByPriceRange() const
 {
     double targetPrice = 0.0;
     const double PRICE_SEARCH_RANGE = 0.12; // +/- 12% range required with project
-    bool found = false;
+    bool targetPriceFound = false;
     bool validInput = true;
 
     cout << "Enter target price: ";
@@ -642,14 +648,14 @@ void Inventory::searchByPriceRange() const
 
         for (int i = 0; i < recordCount; i++)
         {
-            if (cars[i].getPrice() >= lowerLimit && cars[i].getPrice() <= upperLimit)
+            if (cars[i]->getPrice() >= lowerLimit && cars[i]->getPrice() <= upperLimit)
             {
-                cout << cars[i].toString() << "\n";
-                found = true;
+                cout << cars[i]->toString() << "\n";
+                targetPriceFound = true;
             }
         }
 
-        if (!found)
+        if (!targetPriceFound)
         {
             cout << "No cars found in the specified price range\n";
         }
@@ -659,9 +665,8 @@ void Inventory::searchByPriceRange() const
 void Inventory::sortMenu()
 {
     int sortChoice = 0;
-    bool stayInSortMenu = true;
 
-    while (stayInSortMenu)
+    do
     {
         displaySortMenu();
         cin >> sortChoice;
@@ -678,13 +683,12 @@ void Inventory::sortMenu()
             break;
         case BACK_TO_MAIN_MENU_FROM_SORT:
             cout << "Returning to main menu...\n";
-            stayInSortMenu = false;
             break;
         default:
-            clearInputError("Invalid sort choice. Please enter a number between 1 and 6.");
+            clearInputError("Invalid sort choice. Please enter a number between 1 and " + to_string(BACK_TO_MAIN_MENU_FROM_SORT));
             break;
         }
-    }
+    } while (sortChoice != BACK_TO_MAIN_MENU_FROM_SORT);
 }
 
 void Inventory::sortInventory(int sortField)
@@ -700,25 +704,25 @@ void Inventory::sortInventory(int sortField)
             switch (sortField)
             {
             case SORT_BY_CAR_ID:
-                swapNeeded = cars[j].getId() > cars[j + 1].getId();
+                swapNeeded = cars[j]->getId() > cars[j + 1]->getId();
                 break;
             case SORT_BY_MODEL:
-                swapNeeded = cars[j].getModel() > cars[j + 1].getModel();
+                swapNeeded = cars[j]->getModel() > cars[j + 1]->getModel();
                 break;
             case SORT_BY_MANUFACTURER:
-                swapNeeded = cars[j].getManufacturer() > cars[j + 1].getManufacturer();
+                swapNeeded = cars[j]->getManufacturer() > cars[j + 1]->getManufacturer();
                 break;
             case SORT_BY_QUANTITY:
-                swapNeeded = cars[j].getQuantity() > cars[j + 1].getQuantity();
+                swapNeeded = cars[j]->getQuantity() > cars[j + 1]->getQuantity();
                 break;
             case SORT_BY_PRICE:
-                swapNeeded = cars[j].getPrice() > cars[j + 1].getPrice();
+                swapNeeded = cars[j]->getPrice() > cars[j + 1]->getPrice();
                 break;
             }
 
             if (swapNeeded)
             {
-                Car temp = cars[j];
+                Car* temp = cars[j];
                 cars[j] = cars[j + 1];
                 cars[j + 1] = temp;
             }
@@ -998,6 +1002,16 @@ TUVW9123  Ghost               Rolls_Royce                1   299999.99   *LOW IN
 4. Quantity
 5. Price
 6. Return to Main Menu
+Enter choice: g
+Invalid sort choice. Please enter a number between 1 and 6
+
+ --- Sort Options ---
+1. Car ID
+2. Model
+3. Manufacturer
+4. Quantity
+5. Price
+6. Return to Main Menu
 Enter choice: 6
 Returning to main menu...
 
@@ -1018,6 +1032,21 @@ XYZA4567  A4                  Audi                       9    45999.99 - Model c
 BCDE8912  Q7                  Audi                       3    59999.99   *LOW INVENTORY* - Model contains less than minimum required characters;
 NOPQ2345  Rogue               Nissan                    11    26999.99 - First 4 characters must be alpha only (excluding O);
 LMNO8912  XC90                Volvo                      2    57999.99   *LOW INVENTORY* - First 4 characters must be alpha only (excluding O);
+ABCD1234  GV70                Genesis                   -3    49999.99   *LOW INVENTORY* - Quantity must be at least 0;
+WXYZ1234  M3                  BMW                        5     9999.99 - Model contains less than minimum required characters; Price must be above minimum price;
+WXYA1234  @Special            BMW                        4    29999.99   *LOW INVENTORY* - Model does not start with an alpha character; Model contains non-alphanumeric character;
+ABCD1234  Z4                  BMW                       -2    11000.00   *LOW INVENTORY* - Model contains less than minimum required characters; Price must be above minimum price; Quantity must be at least 0;
+WXYZ1234  Z8                  BMW                       -3     9999.99   *LOW INVENTORY* - Model contains less than minimum required characters; Price must be above minimum price; Quantity must be at least 0;
+
+
+ --- Main Menu ---
+1. Print Unsorted Inventory
+2. Search Card Records
+3. Sort Inventory
+4. Print Invalid Records
+5. Quit
+Enter choice: g
+Invalid menu choice. Please enter a number between 1 and 5
 
 
  --- Main Menu ---
@@ -1044,5 +1073,6 @@ PQRS5678  Stroller            Rolls_Royce                2   199999.99   *LOW IN
 PQRS5678  Stroller            Rolls_Royce_Extra          4   199999.99   *LOW INVENTORY*
 TUVW9123  Ghost               Rolls_Royce                1   299999.99   *LOW INVENTORY*
 Now exiting program...
+
 
 */
