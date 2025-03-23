@@ -1,0 +1,10 @@
+MNOP4567  F150                Ford                       2    42999.99   *LOW INVENTORY* - First 4 characters must be alpha only (excluding O); 
+XYZA4567  A4                  Audi                       9    45999.99 - Model contains less than minimum required characters; 
+BCDE8912  Q7                  Audi                       3    59999.99   *LOW INVENTORY* - Model contains less than minimum required characters; 
+NOPQ2345  Rogue               Nissan                    11    26999.99 - First 4 characters must be alpha only (excluding O); 
+LMNO8912  XC90                Volvo                      2    57999.99   *LOW INVENTORY* - First 4 characters must be alpha only (excluding O); 
+ABCD1234  GV70                Genesis                   -3    49999.99   *LOW INVENTORY* - Quantity must be at least 0; 
+WXYZ1234  M3                  BMW                        5     9999.99 - Model contains less than minimum required characters; Price must be above minimum price; 
+WXYA1234  @Special            BMW                        4    29999.99   *LOW INVENTORY* - Model does not start with an alpha character; Model contains non-alphanumeric character; 
+ABCD1234  Z4                  BMW                       -2    11000.00   *LOW INVENTORY* - Model contains less than minimum required characters; Price must be above minimum price; Quantity must be at least 0; 
+WXYZ1234  Z8                  BMW                       -3     9999.99   *LOW INVENTORY* - Model contains less than minimum required characters; Price must be above minimum price; Quantity must be at least 0; 
